@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
 from app.db import engine, Base
-from app.routes.users import router as users_router
+from app.routers.users import router as users_router
 from utils.config import settings
 
 
