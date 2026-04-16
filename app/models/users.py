@@ -1,27 +1,43 @@
-from sqlalchemy import Integer, String, Date, Boolean, DateTime
+from sqlalchemy import Boolean, Column, Date, DateTime, BigInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime, date
+from sqlalchemy.sql import func
 from app.db import Base
 
 
 class User(Base):
     __tablename__ = "users"
 
-    #PK
-    UserID: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
+    UserID = Column(BigInteger, primary_key=True, index=True)
+    Email = Column(String(255), unique=True, nullable=False, index=True)
+    PasswordHash = Column(String(255), nullable=True)  # OAuth user can be NULL
+    UserName = Column(String(50), unique=True, nullable=False, index=True)
+    FirstName = Column(String(100), nullable=False)
+    LastName = Column(String(100), nullable=False)
+    BirthDate = Column(Date, nullable=False)
+    Phone = Column(String(30), nullable=True)
 
-    #Personal Info
-    Email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
-    Password: Mapped[str | None] = mapped_column(String, nullable=True)
-    UserName: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
-    FirstName: Mapped[str] = mapped_column(String, nullable=False)
-    LastName: Mapped[str] = mapped_column(String, nullable=False)
-    BirthDate: Mapped[date | None] = mapped_column(Date, nullable=True)
-    Phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    AuthProvider = Column(String(30), nullable=False, default="local") #Login path
 
-    #Account Status
-    CreatedAt: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    LastLogin: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    IsActive: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    isDeleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    AccountSetup: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    EmailVerified = Column(Boolean, nullable=False, default=False)
+    PhoneVerified = Column(Boolean, nullable=False, default=False)
+    SchoolVerified = Column(Boolean, nullable=False, default=False)
+    IdentityVerified = Column(Boolean, nullable=False, default=False)
+
+    ProfilePhotoUrl = Column(String(500), nullable=True)
+    ProfilePhotoStatus = Column(String(30), nullable=False, default="pending")
+    # pending, approved, rejected, manual_review
+
+    VerificationStatus = Column(String(30), nullable=False, default="unverified")
+    # unverified, pending, manual_review, verified, rejected
+
+    AccountStatus = Column(String(30), nullable=False, default="pending_verification")
+    # pending_verification, active, restricted, suspended, deleted
+
+    AccountSetup = Column(Boolean, nullable=False, default=False)
+    IsActive = Column(Boolean, nullable=False, default=True)
+    IsDeleted = Column(Boolean, nullable=False, default=False)
+
+    CreatedAt = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    UpdatedAt = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    LastLoginAt = Column(DateTime(timezone=True), nullable=True)
