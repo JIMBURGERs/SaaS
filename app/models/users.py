@@ -1,6 +1,4 @@
 from sqlalchemy import Boolean, Column, Date, DateTime, BigInteger, String
-from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime, date
 from sqlalchemy.sql import func
 from app.db import Base
 
@@ -10,14 +8,15 @@ class User(Base):
 
     UserID = Column(BigInteger, primary_key=True, index=True)
     Email = Column(String(255), unique=True, nullable=False, index=True)
-    PasswordHash = Column(String(255), nullable=True)  # OAuth user can be NULL
+    PasswordHash = Column(String(255), nullable=True)
     UserName = Column(String(50), unique=True, nullable=False, index=True)
+    Phone = Column(String(30), unique=True, nullable=True)
+
     FirstName = Column(String(100), nullable=False)
     LastName = Column(String(100), nullable=False)
     BirthDate = Column(Date, nullable=False)
-    Phone = Column(String(30), nullable=True)
 
-    AuthProvider = Column(String(30), nullable=False, default="local") #Login path
+    AuthProvider = Column(String(30), nullable=False, default="local")
 
     EmailVerified = Column(Boolean, nullable=False, default=False)
     PhoneVerified = Column(Boolean, nullable=False, default=False)
