@@ -10,15 +10,15 @@ class UserBase(BaseModel):
     FirstName: str = Field(..., max_length=100)
     LastName: str = Field(..., max_length=100)
     BirthDate: date
-    Phone: Optional[str] = None
+    Phone: Optional[str] = Field(None, max_length=30)
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "Email": "joon@gmail.com",
-                "UserName": "test",
-                "FirstName": "test",
-                "LastName": "test",
+                "UserName": "testuser",
+                "FirstName": "Joon",
+                "LastName": "Hong",
                 "BirthDate": "2003-04-23",
                 "Phone": "111-111-1111"
             }
@@ -34,12 +34,12 @@ class UserCreate(UserBase):
         "json_schema_extra": {
             "example": {
                 "Email": "joon@gmail.com",
-                "UserName": "test",
-                "FirstName": "test",
-                "LastName": "test",
+                "UserName": "testuser",
+                "FirstName": "Joon",
+                "LastName": "Hong",
                 "BirthDate": "2003-04-23",
                 "Phone": "111-111-1111",
-                "Password": "test1234",
+                "Password": "test1234!",
                 "AuthProvider": "local"
             }
         }
@@ -51,14 +51,14 @@ class UserUpdate(BaseModel):
     FirstName: Optional[str] = Field(None, max_length=100)
     LastName: Optional[str] = Field(None, max_length=100)
     BirthDate: Optional[date] = None
-    Phone: Optional[str] = None
-    ProfilePhotoUrl: Optional[str] = None
+    Phone: Optional[str] = Field(None, max_length=30)
+    ProfilePhotoUrl: Optional[str] = Field(None, max_length=500)
     AccountSetup: Optional[bool] = None
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "UserName": "updated_test",
+                "UserName": "updated_testuser",
                 "FirstName": "Joon",
                 "LastName": "Hong",
                 "BirthDate": "2003-04-23",
@@ -105,9 +105,9 @@ class UserResponse(BaseModel):
             "example": {
                 "UserID": 1,
                 "Email": "joon@gmail.com",
-                "UserName": "test",
-                "FirstName": "test",
-                "LastName": "test",
+                "UserName": "testuser",
+                "FirstName": "Joon",
+                "LastName": "Hong",
                 "BirthDate": "2003-04-23",
                 "Phone": "111-111-1111",
                 "AuthProvider": "local",
@@ -115,7 +115,7 @@ class UserResponse(BaseModel):
                 "PhoneVerified": False,
                 "SchoolVerified": False,
                 "IdentityVerified": False,
-                "ProfilePhotoUrl": "https://example.com/profile.jpg",
+                "ProfilePhotoUrl": None,
                 "ProfilePhotoStatus": "pending",
                 "VerificationStatus": "unverified",
                 "AccountStatus": "pending_verification",
