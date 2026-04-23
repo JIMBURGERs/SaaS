@@ -1,30 +1,61 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.users import User
 from app.schemas.users import UserCreate, UserUpdate
 
-
-def get_users(db: Session):
-    return db.query(User).filter(User.IsDeleted == False).all()
-
-
-def get_user_by_id(db: Session, user_id: int):
-    return db.query(User).filter(User.UserID == user_id, User.IsDeleted == False).first()
+async def get_users(db: AsyncSession):
+    result = await db.execute(
+        select(User).where(User.IsDeleted == False)
+    )
+    return result.scalars().all()
 
 
-def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.Email == email, User.IsDeleted == False).first()
+async def get_user_by_id(db: AsyncSession, user_id: int):
+    result = await db.execute(
+        select(User).where(
+            User.UserID == user_id,
+            User.IsDeleted == False
+        )
+    )
+    return result.scalars().first()
 
 
-def get_user_by_username(db: Session, username: str):
-    return db.query(User).filter(User.UserName == username, User.IsDeleted == False).first()
+async def get_user_by_email(db: AsyncSession, email: str):
+    result = await db.execute(
+        select(User).where(
+            User.Email == email,
+            User.IsDeleted == False
+        )
+    )
+    return result.scalars().first()
 
 
-def get_user_by_phone(db: Session, phone: str):
-    return db.query(User).filter(User.Phone == phone, User.IsDeleted == False).first()
+async def get_user_by_username(db: AsyncSession, username: str):
+    result = await db.execute(
+        select(User).where(
+            User.UserName == username,
+            User.IsDeleted == False
+        )
+    )
+    return result.scalars().first()
 
 
-def create_user(db: Session, user_data: UserCreate, password_hash: str | None = None):
+async def get_user_by_phone(db: AsyncSession, phone: str):
+    result = await db.execute(
+        select(User).where(
+            User.Phone == phone,
+            User.IsDeleted == False
+        )
+    )
+    return result.scalars().first()
+
+
+async def create_user(
+    db: AsyncSession,
+    user_data: UserCreate,
+    password_hash: str | None = None
+):
     user = User(
         Email=user_data.Email,
         PasswordHash=password_hash,
@@ -36,26 +67,27 @@ def create_user(db: Session, user_data: UserCreate, password_hash: str | None = 
         AuthProvider=user_data.AuthProvider,
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def update_user(db: Session, user: User, user_data: UserUpdate):
+async def update_user(db: AsyncSession, user: User, user_data: UserUpdate):
     update_data = user_data.model_dump(exclude_unset=True)
 
     for key, value in update_data.items():
         setattr(user, key, value)
 
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def soft_delete_user(db: Session, user: User):
+async def soft_delete_user(db: AsyncSession, user: User):
     user.IsDeleted = True
     user.IsActive = False
     user.AccountStatus = "deleted"
-    db.commit()
-    db.refresh(user)
+
+    await db.commit()
+    await db.refresh(user)
     return user

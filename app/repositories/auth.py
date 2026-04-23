@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.users import User
 
 
-def register_user(
-    db: Session,
+async def register_user(
+    db: AsyncSession,
     *,
     email: str,
     username: str,
@@ -36,20 +37,24 @@ def register_user(
         IsActive=True,
         IsDeleted=False,
     )
+
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def authenticate_user(db: Session, email: str):
-    return db.query(User).filter(
-        User.Email == email,
-        User.IsDeleted == False
-    ).first()
+async def authenticate_user(db: AsyncSession, email: str):
+    result = await db.execute(
+        select(User).where(
+            User.Email == email,
+            User.IsDeleted == False
+        )
+    )
+    return result.scalars().first()
 
 
-def verify_user_email(db: Session, user: User):
+async def verify_user_email(db: AsyncSession, user: User):
     user.EmailVerified = True
 
     if user.EmailVerified or user.PhoneVerified or user.IdentityVerified or user.SchoolVerified:
@@ -58,12 +63,12 @@ def verify_user_email(db: Session, user: User):
     else:
         user.VerificationStatus = "pending"
 
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def verify_user_phone(db: Session, user: User):
+async def verify_user_phone(db: AsyncSession, user: User):
     user.PhoneVerified = True
 
     if user.EmailVerified or user.PhoneVerified or user.IdentityVerified or user.SchoolVerified:
@@ -72,22 +77,22 @@ def verify_user_phone(db: Session, user: User):
     else:
         user.VerificationStatus = "pending"
 
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def update_user_password(db: Session, user: User, password_hash: str):
+async def update_user_password(db: AsyncSession, user: User, password_hash: str):
     user.PasswordHash = password_hash
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def update_last_login(db: Session, user: User):
+async def update_last_login(db: AsyncSession, user: User):
     user.LastLoginAt = datetime.now(timezone.utc)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 

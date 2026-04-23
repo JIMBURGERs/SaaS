@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 import random
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.auth_codes import AuthCode
 
@@ -13,8 +14,8 @@ def generate_code(length: int = 6) -> str:
     return "".join(str(random.randint(0, 9)) for _ in range(length))
 
 
-def create_auth_code(
-    db: Session,
+async def create_auth_code(
+    db: AsyncSession,
     *,
     user_id: int,
     code_type: str,
@@ -31,14 +32,15 @@ def create_auth_code(
         IsUsed=False,
         ExpiresAt=expires_at,
     )
+
     db.add(auth_code)
-    db.commit()
-    db.refresh(auth_code)
+    await db.commit()
+    await db.refresh(auth_code)
     return auth_code
 
 
-def get_valid_auth_code(
-    db: Session,
+async def get_valid_auth_code(
+    db: AsyncSession,
     *,
     user_id: int,
     code_type: str,
@@ -46,18 +48,28 @@ def get_valid_auth_code(
 ):
     now = datetime.now(timezone.utc)
 
-    return db.query(AuthCode).filter(
-        AuthCode.UserID == user_id,
-        AuthCode.CodeType == code_type,
-        AuthCode.Code == code,
-        AuthCode.IsUsed == False,
-        AuthCode.ExpiresAt > now,
-    ).order_by(AuthCode.CreatedAt.desc()).first()
+    result = await db.execute(
+        select(AuthCode)
+        .where(
+            AuthCode.UserID == user_id,
+            AuthCode.CodeType == code_type,
+            AuthCode.Code == code,
+            AuthCode.IsUsed == False,
+            AuthCode.ExpiresAt > now,
+        )
+        .order_by(AuthCode.CreatedAt.desc())
+    )
+
+    return result.scalars().first()
 
 
-def mark_auth_code_used(db: Session, auth_code: AuthCode):
+async def mark_auth_code_used(
+    db: AsyncSession,
+    auth_code: AuthCode,
+):
     auth_code.IsUsed = True
     auth_code.UsedAt = datetime.now(timezone.utc)
-    db.commit()
-    db.refresh(auth_code)
+
+    await db.commit()
+    await db.refresh(auth_code)
     return auth_code

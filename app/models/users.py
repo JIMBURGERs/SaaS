@@ -1,42 +1,54 @@
-from sqlalchemy import Boolean, Column, Date, DateTime, BigInteger, String
-from sqlalchemy.sql import func
+from datetime import date, datetime, timezone
+
+from sqlalchemy import Boolean, Date, DateTime, String
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db import Base
 
 
 class User(Base):
     __tablename__ = "users"
 
-    UserID = Column(BigInteger, primary_key=True, index=True)
-    Email = Column(String(255), unique=True, nullable=False, index=True)
-    PasswordHash = Column(String(255), nullable=True)
-    UserName = Column(String(50), unique=True, nullable=False, index=True)
-    Phone = Column(String(30), unique=True, nullable=True)
+    UserID: Mapped[int] = mapped_column(primary_key=True, index=True)
+    Email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    PasswordHash: Mapped[str | None] = mapped_column(String, nullable=True)
+    UserName: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    Phone: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    FirstName = Column(String(100), nullable=False)
-    LastName = Column(String(100), nullable=False)
-    BirthDate = Column(Date, nullable=False)
+    FirstName: Mapped[str] = mapped_column(String, nullable=False)
+    LastName: Mapped[str] = mapped_column(String, nullable=False)
+    BirthDate: Mapped[date] = mapped_column(Date, nullable=False)
+    AuthProvider: Mapped[str] = mapped_column(String, nullable=False, default="local")
 
-    AuthProvider = Column(String(30), nullable=False, default="local")
+    EmailVerified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    PhoneVerified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    SchoolVerified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    IdentityVerified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    EmailVerified = Column(Boolean, nullable=False, default=False)
-    PhoneVerified = Column(Boolean, nullable=False, default=False)
-    SchoolVerified = Column(Boolean, nullable=False, default=False)
-    IdentityVerified = Column(Boolean, nullable=False, default=False)
+    ProfilePhotoUrl: Mapped[str | None] = mapped_column(String, nullable=True)
+    ProfilePhotoStatus: Mapped[str] = mapped_column(String, nullable=False, default="pending")
 
-    ProfilePhotoUrl = Column(String(500), nullable=True)
-    ProfilePhotoStatus = Column(String(30), nullable=False, default="pending")
-    # pending, approved, rejected, manual_review
+    VerificationStatus: Mapped[str] = mapped_column(String, nullable=False, default="unverified")
+    AccountStatus: Mapped[str] = mapped_column(String, nullable=False, default="pending_verification")
+    AccountSetup: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    IsActive: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    IsDeleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    VerificationStatus = Column(String(30), nullable=False, default="unverified")
-    # unverified, pending, manual_review, verified, rejected
+    CreatedAt: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
-    AccountStatus = Column(String(30), nullable=False, default="pending_verification")
-    # pending_verification, active, restricted, suspended, deleted
+    UpdatedAt: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
-    AccountSetup = Column(Boolean, nullable=False, default=False)
-    IsActive = Column(Boolean, nullable=False, default=True)
-    IsDeleted = Column(Boolean, nullable=False, default=False)
-
-    CreatedAt = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    UpdatedAt = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    LastLoginAt = Column(DateTime(timezone=True), nullable=True)
+    LastLoginAt: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        default=None,
+    )

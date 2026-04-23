@@ -10,7 +10,8 @@ class Base(DeclarativeBase):
 engine = create_async_engine(
     settings.database_url,
     echo=True,
-    future=True
+    future=True,
+    connect_args={"ssl": "require"}  
 )
 
 AsyncSessionLocal = async_sessionmaker(
